@@ -1,0 +1,10 @@
+# config
+/config/.phpecs
+/config/.phpunit.result.cache
+
+# composer
+/vendor/
+
+# custom
+*.rl
+/notes/
