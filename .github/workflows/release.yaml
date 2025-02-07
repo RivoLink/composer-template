@@ -33,6 +33,15 @@ jobs:
       - name: Composer Install
         uses: "ramsey/composer-install@v3"
 
+      - name: Install Box Globally
+        run: |
+          composer global require humbug/box
+          box --version
+
+      - name: Compute Variables
+        run: |
+          cp .env .env.local
+
       - name: Compute Version
         run: |
           branch=$(jq -r '.workflow_run.head_branch' "$GITHUB_EVENT_PATH")
@@ -43,6 +52,25 @@ jobs:
         run: |
           version=$(grep 'APP_VERSION' .env | sed "s/[\"']//g" | awk '{print $3}')
           echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Remove Vendor
+        run: |
+          rm -rf vendor
+
+      - name: Composer Install (No Dev)
+        uses: "ramsey/composer-install@v3"
+        with:
+          composer-options: "--no-dev --no-interaction"
+
+      - name: Compile Project
+        run: |
+          rm -rf bin/*
+          box compile --config=boxconfig.json
+          cp "bin/index.phar" "bin/index-${{env.VERSION}}.phar"
+
+      - name: Setup Artifact
+        run: |
+          echo "ARTIFACT=bin/index-${{env.VERSION}}.phar" >> "$GITHUB_ENV"
 
       - name: Commit Changes
         run: |
@@ -56,8 +84,9 @@ jobs:
       - name: Remove Branch
         run: |
           git push origin --delete "${{env.BRANCH}}"
+
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         run: |
-          gh release create "${{env.VERSION}}" --generate-notes
+          gh release create "${{env.VERSION}}" "${{env.ARTIFACT}}" --generate-notes
