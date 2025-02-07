@@ -16,3 +16,14 @@ phpunit:
 
 ci: phpstan phpecs phpunit
 .PHONY: ci
+
+install:
+	rm -rf vendor
+	composer install
+.PHONY: install
+
+build:
+	rm -rf vendor
+	composer install --no-dev
+	box compile --config=boxconfig.json
+.PHONY: build
