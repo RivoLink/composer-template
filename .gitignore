@@ -8,6 +8,9 @@
 # composer
 /vendor/
 
+# cache
+/cache/
+
 # custom
 *.rl
 /notes/
